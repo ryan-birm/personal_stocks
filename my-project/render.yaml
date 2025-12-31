@@ -1,0 +1,40 @@
+# Render deployment configuration
+# https://render.com/docs/yaml-spec
+
+services:
+  # Backend API (Python FastAPI)
+  - type: web
+    name: stock-portfolio-backend
+    env: python
+    buildCommand: pip install -r src/backend/requirements.txt
+    startCommand: cd src/backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: POLYGON_API_KEY
+        sync: false
+      - key: POLYGON_BASE_URL
+        value: https://api.polygon.io
+      - key: ALLOWED_ORIGINS
+        # Update this with your frontend URL after deployment
+        # Format: https://your-frontend.onrender.com
+        sync: false
+
+  # Frontend (React)
+  - type: web
+    name: stock-portfolio-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_API_BASE_URL
+        # Update this with your backend URL after deployment
+        # Format: https://your-backend.onrender.com
+        sync: false
+

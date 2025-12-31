@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { getStockData, getHistoricalStockData, getCompanyName } from '../../services/stockApi'
-import { saveStockToDatabase } from '../../services/stockDatabase'
+import { getStockData, getHistoricalStockData, getCompanyName, saveStockToDatabase } from '../../services/api'
 import { validateStockInput, stockAlreadyExists, calculateGainLoss } from '../../utils/stockHelpers'
 
 const AddStockForm = ({ user, stocks, onStockAdded, onError }) => {

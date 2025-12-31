@@ -8,6 +8,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: true // Enable sourcemaps for debugging
+    sourcemap: true, // Enable sourcemaps for debugging
+  },
+  // Exclude backend directory from being processed
+  publicDir: 'public',
+  resolve: {
+    alias: {
+      // Prevent imports from backend
+    }
   }
 })

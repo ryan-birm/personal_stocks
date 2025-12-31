@@ -1,8 +1,5 @@
-"""
-Supabase client configuration for Python backend
-"""
+from supabase import create_client
 import os
-from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -26,5 +23,5 @@ if not supabase_url or not supabase_anon_key:
     print('Missing:', {'url': not supabase_url, 'key': not supabase_anon_key})
 
 # Create Supabase client
-supabase: Client = create_client(safe_url, safe_key)
+supabase_server = create_client(safe_url, safe_key)
 

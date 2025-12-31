@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { getStockChartData, getCompanyName } from '../../services/stockApi'
+import { getStockChartData, getCompanyName } from '../../services/api'
 
 const StockChart = ({ ticker, onClose }) => {
   const [chartData, setChartData] = useState(null)

@@ -1,3 +1,3 @@
 import { useState, useEffect, useRef } from 'react'
-import { getStockChartData, getCompanyName } from '../../services/stockApi'
+import { getStockChartData, getCompanyName } from '../../services/api'
 
