@@ -1,6 +1,3 @@
-/**
- * Simple API client - all backend calls in one place
- */
 import { supabase } from './supabase_client'
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'

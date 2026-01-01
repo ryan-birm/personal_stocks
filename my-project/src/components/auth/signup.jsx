@@ -23,7 +23,7 @@ export default function Signup({ onClose }) {
 
         const { data, error } = await supabase.auth.signUp({
             email: email.trim(),
-            password: password,
+            password: password.trim(),
         })
 
         if (error) {
