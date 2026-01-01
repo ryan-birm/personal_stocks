@@ -2,30 +2,17 @@
 Backend services package
 """
 from .supabase_client import supabase
-from .stock_api import (
-    get_stock_data,
-    get_historical_stock_data,
-    get_stock_chart_data,
-    get_stock_full_info
-)
-from .stock_database import (
-    test_rls_policies,
-    ensure_user_stocks_table,
-    load_user_stocks,
-    save_stock_to_database,
-    remove_stock_from_database
+from .database import (
+    get_items_from_db,
+    create_item_in_db,
+    update_item_in_db,
+    delete_item_from_db
 )
 
 __all__ = [
     'supabase',
-    'get_stock_data',
-    'get_historical_stock_data',
-    'get_stock_chart_data',
-    'get_stock_full_info',
-    'test_rls_policies',
-    'ensure_user_stocks_table',
-    'load_user_stocks',
-    'save_stock_to_database',
-    'remove_stock_from_database',
+    'get_items_from_db',
+    'create_item_in_db',
+    'update_item_in_db',
+    'delete_item_from_db',
 ]
-

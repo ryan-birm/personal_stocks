@@ -23,5 +23,5 @@ if not supabase_url or not supabase_anon_key:
     print('Missing:', {'url': not supabase_url, 'key': not supabase_anon_key})
 
 # Create Supabase client
-supabase_server = create_client(safe_url, safe_key)
+supabase = create_client(safe_url, safe_key)
 

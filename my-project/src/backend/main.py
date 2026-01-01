@@ -1,41 +1,39 @@
 """
-FastAPI backend server for stock portfolio application
+FastAPI Backend Server
+
+This is your API server that connects:
+- Frontend (React) → calls these endpoints
+- Database (Supabase) → stores/retrieves data
+
+Flow: React → FastAPI (this file) → Database
 """
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel
-import asyncio
 import os
-from services.stock_api import (
-    get_stock_data,
-    get_stock_chart_data,
-    get_historical_stock_data
-)
-from services.stock_database import (
-    load_user_stocks,
-    save_stock_to_database,
-    remove_stock_from_database,
-    ensure_user_stocks_table,
-    test_rls_policies
+
+# Import your database service
+from services.database import (
+    get_items_from_db,
+    create_item_in_db,
+    update_item_in_db,
+    delete_item_from_db
 )
 
-app = FastAPI(title="Stock Portfolio API", version="1.0.0")
+app = FastAPI(title="API", version="1.0.0")
 
-# Get allowed origins from environment variable (for production)
-# Format: "https://your-app.onrender.com,http://localhost:5173"
+# CORS configuration - allows React frontend to call this API
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
 if allowed_origins_env:
     allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",")]
 else:
-    # Default to localhost for development
     allowed_origins = [
         "http://localhost:5173",
         "http://localhost:3000",
         "http://localhost:5174"
     ]
 
-# CORS middleware to allow frontend to call backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -44,31 +42,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Request/Response Models
-class StockRequest(BaseModel):
-    ticker: str
-    chart_days: Optional[int] = 30
-    historical_date: Optional[str] = None
+# ============================================
+# REQUEST/RESPONSE MODELS (Pydantic)
+# ============================================
 
-class SaveStockRequest(BaseModel):
-    ticker: str
-    stock_name: str
-    buy_price: float
-    buy_date: str
+class ItemCreate(BaseModel):
+    """Model for creating a new item"""
+    name: str
+    description: Optional[str] = None
 
-class StockResponse(BaseModel):
-    success: bool
-    data: Optional[dict] = None
-    error: Optional[str] = None
+class ItemUpdate(BaseModel):
+    """Model for updating an item"""
+    name: Optional[str] = None
+    description: Optional[str] = None
 
-# Dependency to get user ID from Authorization header
+# ============================================
+# AUTHENTICATION HELPER
+# ============================================
+
 async def get_user_id(authorization: Optional[str] = Header(None)) -> str:
-    """Extract user ID from Authorization header"""
+    """
+    Extract user ID from Authorization header
+    Frontend sends: Authorization: Bearer {user_id}
+    """
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header required")
     
-    # In a real app, you'd verify the JWT token here
-    # For now, we'll expect format: "Bearer {user_id}"
     try:
         if authorization.startswith("Bearer "):
             user_id = authorization.replace("Bearer ", "")
@@ -78,111 +77,73 @@ async def get_user_id(authorization: Optional[str] = Header(None)) -> str:
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid authorization: {str(e)}")
 
-# Health check endpoint
+# ============================================
+# API ENDPOINTS
+# ============================================
+
 @app.get("/")
 async def root():
-    return {"message": "Stock Portfolio API", "status": "running"}
+    return {"message": "API", "status": "running"}
 
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
 
-# Stock API endpoints
-@app.post("/api/stocks/data", response_model=StockResponse)
-async def get_stock_info(request: StockRequest):
-    """Get comprehensive stock data"""
+# Example: Get all items for user
+@app.get("/api/items")
+async def get_items(user_id: str = Depends(get_user_id)):
+    """
+    GET /api/items
+    Returns all items for the authenticated user
+    """
     try:
-        result = await get_stock_data(
-            request.ticker,
-            chart_days=request.chart_days or 30,
-            historical_date=request.historical_date
-        )
-        if result.get('success'):
-            return StockResponse(success=True, data=result)
-        else:
-            return StockResponse(success=False, error=result.get('error', 'Unknown error'))
-    except Exception as e:
-        return StockResponse(success=False, error=str(e))
-
-@app.get("/api/stocks/{ticker}/chart")
-async def get_chart_data(ticker: str, days: int = 30):
-    """Get stock chart data"""
-    try:
-        result = await get_stock_chart_data(ticker, days)
-        if result.get('success'):
-            return {"success": True, "data": result}
-        else:
-            raise HTTPException(status_code=404, detail=result.get('error', 'Chart data not found'))
+        # Call database service to get data
+        items = await get_items_from_db(user_id)
+        return {"success": True, "data": items}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/stocks/{ticker}/historical")
-async def get_historical_data(ticker: str, date: str):
-    """Get historical stock price for a specific date"""
+# Example: Create new item
+@app.post("/api/items")
+async def create_item(item: ItemCreate, user_id: str = Depends(get_user_id)):
+    """
+    POST /api/items
+    Creates a new item for the authenticated user
+    """
     try:
-        result = await get_historical_stock_data(ticker, date)
-        if result.get('success'):
-            return {"success": True, "data": result}
-        else:
-            raise HTTPException(status_code=404, detail=result.get('error', 'Historical data not found'))
+        # Call database service to save data
+        new_item = await create_item_in_db(user_id, item.name, item.description)
+        return {"success": True, "data": new_item}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Database endpoints
-@app.get("/api/user/stocks")
-async def get_user_stocks(user_id: str = Depends(get_user_id)):
-    """Get all stocks for the authenticated user"""
+# Example: Update item
+@app.put("/api/items/{item_id}")
+async def update_item(item_id: int, item: ItemUpdate, user_id: str = Depends(get_user_id)):
+    """
+    PUT /api/items/{item_id}
+    Updates an existing item
+    """
     try:
-        stocks = await load_user_stocks(user_id)
-        return {"success": True, "data": stocks}
+        updated_item = await update_item_in_db(item_id, user_id, item.name, item.description)
+        return {"success": True, "data": updated_item}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/user/stocks")
-async def save_stock(request: SaveStockRequest, user_id: str = Depends(get_user_id)):
-    """Save a new stock for the authenticated user"""
+# Example: Delete item
+@app.delete("/api/items/{item_id}")
+async def delete_item(item_id: int, user_id: str = Depends(get_user_id)):
+    """
+    DELETE /api/items/{item_id}
+    Deletes an item
+    """
     try:
-        saved_stock = await save_stock_to_database(
-            user_id=user_id,
-            ticker=request.ticker,
-            stock_name=request.stock_name,
-            buy_price=request.buy_price,
-            buy_date=request.buy_date
-        )
-        return {"success": True, "data": saved_stock}
+        await delete_item_from_db(item_id, user_id)
+        return {"success": True, "message": "Item deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@app.delete("/api/user/stocks/{stock_id}")
-async def delete_stock(stock_id: int, user_id: str = Depends(get_user_id)):
-    """Delete a stock for the authenticated user"""
-    try:
-        await remove_stock_from_database(stock_id)
-        return {"success": True, "message": "Stock deleted successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Database setup endpoints
-@app.get("/api/database/check")
-async def check_database():
-    """Check if database table exists"""
-    try:
-        result = await ensure_user_stocks_table()
-        return result
-    except Exception as e:
-        return {"exists": False, "error": str(e)}
-
-@app.get("/api/database/test-rls")
-async def test_rls():
-    """Test RLS policies"""
-    try:
-        result = await test_rls_policies()
-        return result
-    except Exception as e:
-        return {"canAccess": False, "error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
-
