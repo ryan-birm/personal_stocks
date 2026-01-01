@@ -13,10 +13,6 @@ services:
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
-      - key: POLYGON_API_KEY
-        sync: false
-      - key: POLYGON_BASE_URL
-        value: https://api.polygon.io
       - key: ALLOWED_ORIGINS
         # Update this with your frontend URL after deployment
         # Format: https://your-frontend.onrender.com
