@@ -22,10 +22,9 @@ services:
         # Format: https://your-frontend.onrender.com
         sync: false
 
-  # Frontend (React)
-  - type: web
+  # Frontend (React) - Static Site
+  - type: static
     name: stock-portfolio-frontend
-    env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     envVars:
