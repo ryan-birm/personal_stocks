@@ -10,6 +10,15 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: true, // Enable sourcemaps for debugging
   },
+  preview: {
+    host: '0.0.0.0',
+    port: process.env.PORT || 4173,
+    allowedHosts: [
+      'personal-stocks.onrender.com',
+      '.onrender.com', // Allow all Render subdomains
+      'localhost'
+    ]
+  },
   // Exclude backend directory from being processed
   publicDir: 'public',
   resolve: {
