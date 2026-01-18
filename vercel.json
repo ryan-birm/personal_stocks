@@ -1,8 +1,0 @@
-{
-  "buildCommand": "cd my-project && npm run build",
-  "outputDirectory": "my-project/dist",
-  "installCommand": "cd my-project && npm install",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}

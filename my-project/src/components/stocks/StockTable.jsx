@@ -6,11 +6,6 @@ const StockTable = ({ stocks, onRemoveStock, onShowChart }) => {
       <div className="empty-state">
         <h3>No stocks in your portfolio yet</h3>
         <p>Add some stocks to get started!</p>
-        <div className="suggested-stocks">
-          <p><strong>Popular stocks to try:</strong></p>
-          <p>AAPL, GOOGL, MSFT, TSLA, AMZN, NVDA, META</p>
-          <p>NFLX, AMD, INTC, JPM, V, JNJ, WMT, DIS</p>
-        </div>
       </div>
     )
   }
